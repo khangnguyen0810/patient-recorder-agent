@@ -7,4 +7,5 @@ asr = pipeline(
 )
 
 result = asr("https://huggingface.co/datasets/Narsil/asr_dummy/resolve/main/mlk.flac")
+
 print(result)
