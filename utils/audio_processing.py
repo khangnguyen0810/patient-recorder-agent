@@ -7,7 +7,7 @@ def transcribe_medical_audio(audio_path: str) -> str:
 
     pipe = pipeline(
         "automatic-speech-recognition",
-        model="openai/whisper-large-v3-turbo",
+        model="openai/whisper-tiny",
         chunk_length_s=30,
         device=device
     )

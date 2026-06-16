@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from utils.agent import clinical_scribe_agent, session_service
 from google.adk.runners import Runner
 from google.genai import types
+import json
 
 load_dotenv()
 
@@ -46,13 +47,19 @@ async def main():
         new_message=user_message
     )
 
-    print("\n[*] Gemini Response Stream (JSON):")
+    full_response = ""
     async for event in event_stream:
         if event.content and event.content.parts:
             for part in event.content.parts:
                 if part.text:
-                    print(part.text, end="", flush=True)
-    print("\n")
+                    full_response += part.text
+
+    print("\n[*] Gemini Response (JSON):")
+    try:
+        parsed = json.loads(full_response)
+        print(json.dumps(parsed, indent=2, ensure_ascii=False))
+    except json.JSONDecodeError as e:
+        print(f"Could not parse as JSON: {e}")
 
 if __name__ == "__main__":
     asyncio.run(main())
