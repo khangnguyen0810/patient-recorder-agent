@@ -1,3 +1,4 @@
+# utils/schemas_demo.py
 from typing import List, Optional
 from pydantic import BaseModel
 
@@ -16,6 +17,7 @@ class PlanItem(BaseModel):
     description: str
 
 class SOAPNoteSchema(BaseModel):
+    raw_transcript: Optional[str] = None
     chief_complaint: str
     hpi_narrative: Optional[str] = None
     past_medical_history: Optional[List[str]] = None
