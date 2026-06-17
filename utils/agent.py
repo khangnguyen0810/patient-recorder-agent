@@ -37,7 +37,7 @@ async def transcriber_combined_callback(
     )
 
     if llm_request.contents:
-        llm_request.contents = [llm_request.contents[-1]]  # ← added here, before iteration
+        llm_request.contents = [llm_request.contents[-1]]
 
         for content in llm_request.contents:
             if not content.parts:
@@ -78,15 +78,11 @@ async def clean_system_instruction_modifier(
     if llm_request.contents:
         llm_request.contents = [llm_request.contents[-1]]
     
-    # Also clear stale SOAP note from previous patient
     callback_context.state["extracted_soap_note"] = None
     
     return None
 
 
-# --- Agents ---
-
-# Used only via ADK Web UI (audio bytes → Whisper → Gemini)
 transcriber_agent = LlmAgent(
     model='gemini-2.5-flash',
     name='transcriber_agent',
@@ -94,7 +90,6 @@ transcriber_agent = LlmAgent(
     before_model_callback=transcriber_combined_callback
 )
 
-# Core agent — used by both main.py and the SequentialAgent pipeline
 clinical_scribe_agent = LlmAgent(
     model='gemini-2.5-flash',
     name='clinical_scribe_agent',
@@ -104,7 +99,6 @@ clinical_scribe_agent = LlmAgent(
     before_model_callback=clean_system_instruction_modifier
 )
 
-# Pipeline for ADK Web UI: raw audio → transcribe → extract SOAP note
 web_ui_agent = SequentialAgent(
     name="medical_scribe_team",
     sub_agents=[transcriber_agent, clinical_scribe_agent],    
