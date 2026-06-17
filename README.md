@@ -10,7 +10,7 @@ An automated solution designed for clinicians to streamline patient documentatio
 
 ## Demo
 
-![Virtual Medical Assistant Demo](path/to/your/demo-image.png)
+![Virtual Medical Assistant Demo](assets/demo.svg)
 _This demonstration uses an audio sample generated via **Gemini 3.1 Flash TTS**. The image above displays the structured medical summary generated after the AI Agent parses the virtual patient's interaction._
 
 ---
