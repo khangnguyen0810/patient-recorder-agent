@@ -10,10 +10,15 @@ An automated solution designed for clinicians to streamline patient documentatio
 
 ## Demo
 
-![Virtual Medical Assistant Demo](assets/demo.svg)
-_This demonstration uses an audio sample generated via **Gemini 3.1 Flash TTS**. The image above displays the structured medical summary generated after the AI Agent parses the virtual patient's interaction._
+### Raw Structured Output (JSON)
 
----
+![Structured JSON Payload](assets/demo_json.svg)
+_This demonstration uses an audio sample generated via **Gemini 3.1 Flash TTS**. The image above displays the guaranteed, structured medical summary output by the AI Agent after parsing the patient interaction._
+
+### UI Component Representation (Table)
+
+![Tabular Dashboard Visualization](assets/demo_visual.svg)
+_The parsed JSON data rendered into a clean, tabular layout, showcasing how the deterministic payload seamlessly maps to a clinician dashboard or Electronic Health Record (EHR) system._
 
 ## Installation
 
