@@ -1,7 +1,7 @@
 from utils.audio_processing import transcribe_medical_audio
 import asyncio
 from dotenv import load_dotenv
-from utils.agent import clinical_scribe_agent, session_service
+from utils.agent import session_service, root_agent, clinical_scribe_agent
 from google.adk.runners import Runner
 from google.genai import types
 import json

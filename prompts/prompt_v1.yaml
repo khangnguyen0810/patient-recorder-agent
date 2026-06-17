@@ -15,4 +15,3 @@ instruction: |
     - Allergies: Capture allergens along with historical reaction characteristics.
     - Medication Records: Distinguish current baseline medications from new items explicitly prescribed during the current session.
     - Diagnosis & Clinical Assessment: Formulate clear clinical definitions tracking each independent complaint raised during the consult.
-    - Raw Transcript: For the 'raw_transcript' schema field, provide the exact verbatim text transcript generated from the audio recording context without any modifications.
