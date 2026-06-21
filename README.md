@@ -1,12 +1,13 @@
 # Virtual Medical Assistant (Patient Recorder Agent)
 
-An automated solution designed for clinicians to streamline patient documentation. This project listens to patient-doctor consultations and automatically generates accurate, summarized medical records in a strict, structured format—saving hours of manual data entry and pushing records directly to your database without human intervention.
+An automated, **Multi-Agent solution** designed for clinicians to streamline patient documentation. This project orchestrates specialized, decoupled agents to listen to patient-doctor consultations and automatically generate accurate, summarized medical records in a strict, structured format—saving hours of manual data entry and pushing records directly to your database without human intervention.
 
 ## Key Features
 
 - **Flexible Multimodal Ingestion:** Accepts a wide range of audio and video formats.
-- **Guaranteed Schema Enforcement:** Leverages Gemini's **Structured Outputs** feature. The Data Transfer Object (DTO) schema is defined cleanly via deterministic code, strictly preventing the AI from changing the output layout.
-- **System-Agnostic & Future-Proof:** Built with decoupling in mind. You can seamlessly scale, adapt, or migrate to alternative systems simply by updating the DTO schema and system prompt.
+- **Decoupled Multi-Agent Architecture:** Adheres to a practical "separation of concerns" philosophy. The workload is split between an isolated Transcription Agent (handling localized audio processing) and a specialized Synthesis Agent, ensuring extreme reliability and preventing monolithic bottlenecks.
+- **Guaranteed Schema Enforcement:** Leverages Gemini's native **Structured Outputs** feature within the downstream synthesis agent. The Data Transfer Object (DTO) schema is defined cleanly via deterministic code, strictly preventing the AI from altering the output layout while retaining 100% of the raw conversation transcripts.
+- **System-Agnostic & Future-Proof:** Built with decoupling in mind. You can seamlessly scale, adapt, or migrate to alternative LLMs simply by updating the DTO schema or individual agent system prompts.
 
 ## Demo
 
@@ -34,27 +35,27 @@ cd patient-recorder-agent
 
 Isolating your project dependencies ensures your global environment remains clean.
 
-- **macOS / Linux:**
+* **macOS / Linux:**
 
 ```bash
-  python3 -m venv .venv
-  source .venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 
 ```
 
-- **Windows (Command Prompt):**
+* **Windows (Command Prompt):**
 
 ```cmd
-  python -m venv .venv
-  .venv\Scripts\activate
+python -m venv .venv
+.venv\Scripts\activate
 
 ```
 
-- **Windows (PowerShell):**
+* **Windows (PowerShell):**
 
 ```powershell
-  python -m venv .venv
-  .venv\Scripts\Activate.ps1
+python -m venv .venv
+.venv\Scripts\Activate.ps1
 
 ```
 
@@ -78,7 +79,7 @@ GEMINI_API_KEY=your_api_key_here
 
 ```
 
-_(Note: This agent is optimized to utilize the high-speed **Gemini 2.5 Flash** model)._
+*(Note: This agent is optimized to utilize the high-speed **Gemini 2.5 Flash** model).*
 
 ### 2. Testing Custom Audio
 
@@ -98,12 +99,10 @@ python main.py
 
 ```
 
-> 💡 **Performance Note:** The application runs OpenAI Whisper locally in inference mode to transcribe the initial audio. Depending on your local machine's hardware capabilities, execution might take a moment while Whisper finishes processing. Once the transcription transfers to Gemini, processing and structuring happen almost instantly.
+> 💡 **Performance Note:** The system orchestrates specialized agents sequentially. The dedicated **Transcription Agent** runs OpenAI Whisper locally in inference mode to transcribe the initial audio. Depending on your local machine's hardware capabilities, this step might take a moment. Once the raw transcript is handed off to the Gemini-powered **Synthesis Agent**, analysis, processing, and structural enforcement happen almost instantly.
 
 ---
 
 ## Future Integrations
 
 Because the output layout is strictly formatted as a predictable data payload, you can easily plug the results of this script into an active API endpoint to auto-populate EHR (Electronic Health Record) databases or pipe it directly into front-end visualization dashboards.
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](https://opensource.org/licenses/MIT)
