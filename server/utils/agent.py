@@ -37,7 +37,7 @@ async def transcriber_combined_callback(
         "You are a precise, verbatim text transmission assistant. "
         "Your sole task is to repeat the provided text transcript exactly word-for-word. "
         "Do not summarize, do not omit any sentences, do not correct grammar or stutters, "
-        "and do not add any commentary. Output only the verbatim transcript."
+        "and do not add any commentary. Output only the content found inside the <transcript> tags."
     )
 
     if llm_request.contents:
@@ -61,11 +61,26 @@ async def transcriber_combined_callback(
                     try:
                         print(f"\n[*] Intercepted Web UI audio ({detected_mime} -> {computed_suffix}).")
                         print("[*] Transcribing via OpenAI Whisper...")
-                        transcript = transcribe_medical_audio(tmp_path)
-                        print("[*] Transcription complete. Injecting text into Gemini payload.")
+                        
+                        # Unpack the transcript and the metadata object
+                        transcript, metadata = transcribe_medical_audio(tmp_path)
+                        
+                        print("[*] Transcription complete. Injecting text and metadata into Gemini payload.")
 
                         part.inline_data = None
-                        part.text = f"Here is the transcribed medical conversation:\n\n{transcript}"
+                        
+                        # Convert Pydantic metadata to a clean JSON string block
+                        metadata_json = metadata.model_dump_json(indent=2, exclude_none=True)
+                        
+                        # Structured payload injection
+                        part.text = (
+                            f"<audio_metadata>\n"
+                            f"{metadata_json}\n"
+                            f"</audio_metadata>\n\n"
+                            f"<transcript>\n"
+                            f"{transcript}\n"
+                            f"</transcript>"
+                        )
                     finally:
                         if os.path.exists(tmp_path):
                             os.remove(tmp_path)

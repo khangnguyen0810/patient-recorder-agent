@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Literal
+from pydantic import BaseModel, Field
+from typing import Literal, Optional
 
 class SubjectiveSchema(BaseModel):
     reasonForVisit: str | None
@@ -42,7 +42,28 @@ class PlanSchema(BaseModel):
     monitoring: str | None
     followUp: str | None
 
+# --- New Metadata Sub-schemas ---
+
+class Patient(BaseModel):
+    patient_ref: Optional[str] = Field(default=None, description="ID tham chiếu sang hệ thống EMR")
+    age: Optional[int] = None
+    sex: Optional[Literal["male", "female", "other", "unknown"]] = None
+
+class AudioMetadata(BaseModel):
+    audio_file_ref: Optional[str] = None
+    duration_sec: Optional[float] = None
+    language: Optional[str] = None
+    speaker_count: Optional[int] = None
+    diarization_quality: Optional[float] = Field(default=None, ge=0, le=1)
+
+class MetadataSchema(BaseModel):
+    patient: Optional[Patient] = None
+    audio: Optional[AudioMetadata] = None
+
+# --- Main Schema ---
+
 class SOAPNoteSchema(BaseModel):
+    metadata: Optional[MetadataSchema] = None
     subjective: SubjectiveSchema
     objective: ObjectiveSchema
     assessment: AssessmentSchema
