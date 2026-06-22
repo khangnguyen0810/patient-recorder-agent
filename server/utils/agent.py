@@ -1,3 +1,4 @@
+# utils/agent.py
 import os
 import sys
 import tempfile
@@ -8,13 +9,16 @@ from google.adk.agents import LlmAgent, SequentialAgent
 from google.adk.sessions import InMemorySessionService
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.models import LlmRequest, LlmResponse
+import json
+from google.genai.types import Content, Part
+
 
 prompt_folder = os.path.abspath("../prompts")
 sys.path.insert(0, prompt_folder)
 
 from utils.audio_processing import transcribe_medical_audio
 from utils.extract_instruction import extract_instruction
-from utils.schemas_demo import SOAPNoteSchema
+from utils.schemas import SOAPNoteSchema
 
 mimetypes.add_type('audio/mpeg', '.mp3')
 mimetypes.add_type('audio/wav', '.wav')
@@ -82,21 +86,20 @@ async def clean_system_instruction_modifier(
     
     return None
 
-
 transcriber_agent = LlmAgent(
-    model='gemini-2.5-flash',
+    model='gemini-3.1-flash-lite',
     name='transcriber_agent',
     description='Transcribes raw audio payloads and streams text back to the session.',
     before_model_callback=transcriber_combined_callback
 )
 
 clinical_scribe_agent = LlmAgent(
-    model='gemini-2.5-flash',
+    model='gemini-3.1-flash-lite',
     name='clinical_scribe_agent',
     description='Medical Audio Extraction Agent: builds structured SOAP notes from transcripts.',
     output_schema=SOAPNoteSchema,
     output_key="extracted_soap_note",
-    before_model_callback=clean_system_instruction_modifier
+    before_model_callback=clean_system_instruction_modifier,
 )
 
 web_ui_agent = SequentialAgent(
