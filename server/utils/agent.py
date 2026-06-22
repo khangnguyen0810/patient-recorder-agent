@@ -62,17 +62,15 @@ async def transcriber_combined_callback(
                         print(f"\n[*] Intercepted Web UI audio ({detected_mime} -> {computed_suffix}).")
                         print("[*] Transcribing via OpenAI Whisper...")
                         
-                        # Unpack the transcript and the metadata object
                         transcript, metadata = transcribe_medical_audio(tmp_path)
-                        
-                        print("[*] Transcription complete. Injecting text and metadata into Gemini payload.")
+                        print("[*] Transcription complete. Storing metadata in session state.")
 
                         part.inline_data = None
-                        
-                        # Convert Pydantic metadata to a clean JSON string block
                         metadata_json = metadata.model_dump_json(indent=2, exclude_none=True)
                         
-                        # Structured payload injection
+                        # --- FIX 1: Persist the JSON metadata in the shared pipeline state ---
+                        callback_context.state["audio_metadata_json"] = metadata_json
+                        
                         part.text = (
                             f"<audio_metadata>\n"
                             f"{metadata_json}\n"
@@ -88,6 +86,8 @@ async def transcriber_combined_callback(
     return None
 
 
+# utils/agent.py
+
 async def clean_system_instruction_modifier(
     callback_context: CallbackContext,
     llm_request: LlmRequest
@@ -95,8 +95,27 @@ async def clean_system_instruction_modifier(
     llm_request.config.system_instruction = extract_instruction("prompts/prompt_v1.yaml")
     
     if llm_request.contents:
+        # Grab the pure text transcript outputted from the transcription agent
         llm_request.contents = [llm_request.contents[-1]]
+        
+        # --- FIX 2: Retrieve metadata from state and re-wrap the prompt ---
+        metadata_json = callback_context.state.get("audio_metadata_json")
+        if metadata_json:
+            last_msg = llm_request.contents[-1]
+            if last_msg.parts:
+                for part in last_msg.parts:
+                    if part.text:
+                        # Re-inject both chunks so clinical_scribe_agent sees them
+                        part.text = (
+                            f"<audio_metadata>\n"
+                            f"{metadata_json}\n"
+                            f"</audio_metadata>\n\n"
+                            f"<transcript>\n"
+                            f"{part.text}\n"
+                            f"</transcript>"
+                        )
     
+    # Keep your structural key reset intact
     callback_context.state["extracted_soap_note"] = None
     
     return None
