@@ -61,16 +61,16 @@ async def transcriber_combined_callback(
                     try:
                         print(f"\n[*] Intercepted Web UI audio ({detected_mime} -> {computed_suffix}).")
                         print("[*] Transcribing via OpenAI Whisper...")
-                        
+
                         transcript, metadata = transcribe_medical_audio(tmp_path)
                         print("[*] Transcription complete. Storing metadata in session state.")
 
                         part.inline_data = None
                         metadata_json = metadata.model_dump_json(indent=2, exclude_none=True)
-                        
+
                         # --- FIX 1: Persist the JSON metadata in the shared pipeline state ---
                         callback_context.state["audio_metadata_json"] = metadata_json
-                        
+
                         part.text = (
                             f"<audio_metadata>\n"
                             f"{metadata_json}\n"
@@ -93,11 +93,11 @@ async def clean_system_instruction_modifier(
     llm_request: LlmRequest
 ) -> Optional[LlmResponse]:
     llm_request.config.system_instruction = extract_instruction("prompts/prompt_v1.yaml")
-    
+
     if llm_request.contents:
         # Grab the pure text transcript outputted from the transcription agent
         llm_request.contents = [llm_request.contents[-1]]
-        
+
         # --- FIX 2: Retrieve metadata from state and re-wrap the prompt ---
         metadata_json = callback_context.state.get("audio_metadata_json")
         if metadata_json:
@@ -114,11 +114,12 @@ async def clean_system_instruction_modifier(
                             f"{part.text}\n"
                             f"</transcript>"
                         )
-    
+
     # Keep your structural key reset intact
     callback_context.state["extracted_soap_note"] = None
-    
+
     return None
+
 
 transcriber_agent = LlmAgent(
     model='gemini-3.1-flash-lite',
@@ -138,8 +139,8 @@ clinical_scribe_agent = LlmAgent(
 
 web_ui_agent = SequentialAgent(
     name="medical_scribe_team",
-    sub_agents=[transcriber_agent, clinical_scribe_agent],    
-    description=(                                              
+    sub_agents=[transcriber_agent, clinical_scribe_agent],
+    description=(
         "Transcribes raw audio via Whisper, then extracts a structured SOAP note."
     )
 )
