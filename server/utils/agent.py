@@ -1,4 +1,3 @@
-# utils/agent.py
 import os
 import sys
 import tempfile
@@ -68,7 +67,6 @@ async def transcriber_combined_callback(
                         part.inline_data = None
                         metadata_json = metadata.model_dump_json(indent=2, exclude_none=True)
 
-                        # --- FIX 1: Persist the JSON metadata in the shared pipeline state ---
                         callback_context.state["audio_metadata_json"] = metadata_json
 
                         part.text = (
@@ -86,8 +84,6 @@ async def transcriber_combined_callback(
     return None
 
 
-# utils/agent.py
-
 async def clean_system_instruction_modifier(
     callback_context: CallbackContext,
     llm_request: LlmRequest
@@ -95,17 +91,14 @@ async def clean_system_instruction_modifier(
     llm_request.config.system_instruction = extract_instruction("prompts/prompt_v1.yaml")
 
     if llm_request.contents:
-        # Grab the pure text transcript outputted from the transcription agent
         llm_request.contents = [llm_request.contents[-1]]
 
-        # --- FIX 2: Retrieve metadata from state and re-wrap the prompt ---
         metadata_json = callback_context.state.get("audio_metadata_json")
         if metadata_json:
             last_msg = llm_request.contents[-1]
             if last_msg.parts:
                 for part in last_msg.parts:
                     if part.text:
-                        # Re-inject both chunks so clinical_scribe_agent sees them
                         part.text = (
                             f"<audio_metadata>\n"
                             f"{metadata_json}\n"
@@ -115,7 +108,6 @@ async def clean_system_instruction_modifier(
                             f"</transcript>"
                         )
 
-    # Keep your structural key reset intact
     callback_context.state["extracted_soap_note"] = None
 
     return None

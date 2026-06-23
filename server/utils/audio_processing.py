@@ -11,11 +11,9 @@ def transcribe_medical_audio(audio_path: str) -> Tuple[str, AudioMetadata]:
 
     model = WhisperModel("tiny", device=device, compute_type=compute_type)
 
-    # Capture 'info' which contains language and duration
     segments, info = model.transcribe(audio_path, beam_size=5)
     transcript = "".join(segment.text for segment in segments)
     
-    # Map the captured attributes to your Pydantic model
     metadata = AudioMetadata(
         audio_file_ref=os.path.basename(audio_path),
         duration_sec=round(info.duration, 2) if info.duration else None,
