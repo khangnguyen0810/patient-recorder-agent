@@ -58,13 +58,18 @@ async def transcriber_combined_callback(
                         tmp_path = tmp.name
 
                     try:
-                        print(f"\n[*] Intercepted Web UI audio ({detected_mime} -> {computed_suffix}).")
+                        print(f"\n[*] Intercepted Web UI audi ({detected_mime} -> {computed_suffix}).")
                         print("[*] Transcribing via OpenAI Whisper...")
 
                         transcript, metadata = transcribe_medical_audio(tmp_path)
                         print("[*] Transcription complete. Storing metadata in session state.")
 
+                        from datetime import datetime
+                        timestamp = datetime.now().strftime("%Y%m%do_%H%M%S")
+                        metadata.audio_file_ref = f"audio_recording_{timestamp}{computed_suffix}"
+                        
                         part.inline_data = None
+
                         metadata_json = metadata.model_dump_json(indent=2, exclude_none=True)
 
                         callback_context.state["audio_metadata_json"] = metadata_json
