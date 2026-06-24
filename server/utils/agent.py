@@ -19,6 +19,7 @@ from utils.audio_processing import transcribe_medical_audio
 from utils.extract_instruction import extract_instruction
 from utils.schemas import SOAPNoteSchema
 
+# --- Explicitly register common audio & video MIME types ---
 mimetypes.add_type('audio/mpeg', '.mp3')
 mimetypes.add_type('audio/wav', '.wav')
 mimetypes.add_type('audio/x-wav', '.wav')
@@ -26,6 +27,13 @@ mimetypes.add_type('audio/ogg', '.ogg')
 mimetypes.add_type('audio/m4a', '.m4a')
 mimetypes.add_type('audio/x-m4a', '.m4a')
 mimetypes.add_type('audio/mp4', '.mp4')
+
+# Add these video extensions
+mimetypes.add_type('video/mp4', '.mp4')
+mimetypes.add_type('video/quicktime', '.mov')
+mimetypes.add_type('video/x-matroska', '.mkv')
+mimetypes.add_type('video/avi', '.avi')
+mimetypes.add_type('video/webm', '.webm')
 
 
 async def transcriber_combined_callback(
@@ -75,9 +83,6 @@ async def transcriber_combined_callback(
                         callback_context.state["audio_metadata_json"] = metadata_json
 
                         part.text = (
-                            f"<audio_metadata>\n"
-                            f"{metadata_json}\n"
-                            f"</audio_metadata>\n\n"
                             f"<transcript>\n"
                             f"{transcript}\n"
                             f"</transcript>"
@@ -85,6 +90,7 @@ async def transcriber_combined_callback(
                     finally:
                         if os.path.exists(tmp_path):
                             os.remove(tmp_path)
+            print(content.parts)
 
     return None
 
@@ -103,7 +109,8 @@ async def clean_system_instruction_modifier(
             last_msg = llm_request.contents[-1]
             if last_msg.parts:
                 for part in last_msg.parts:
-                    if part.text:
+                    # Target only the part containing the actual agent text transcript
+                    if part.text and "[transcriber_agent] said:" in part.text:
                         part.text = (
                             f"<audio_metadata>\n"
                             f"{metadata_json}\n"
