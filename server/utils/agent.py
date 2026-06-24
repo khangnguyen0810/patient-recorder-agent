@@ -76,7 +76,6 @@ async def transcriber_combined_callback(
                         from datetime import datetime
                         timestamp = datetime.now().strftime("%Y%m%do_%H%M%S")
                         
-                        # Capture the current index number before incrementing file_counter
                         current_audio_idx = file_counter
                         metadata.audio_file_ref = f"media_recording_{timestamp}_{current_audio_idx}{computed_suffix}"
                         file_counter += 1
@@ -85,7 +84,6 @@ async def transcriber_combined_callback(
                          
                         part.inline_data = None
                         
-                        # Injecting the visual label inside the transcript block tags
                         part.text = (
                             f"<transcript>\n"
                             f"Audio {current_audio_idx}:\n"
@@ -102,7 +100,7 @@ async def transcriber_combined_callback(
             callback_context.state["audio_metadata_json"] = json.dumps(metadata_list, indent=2)
 
     return None
-
+L
 
 async def clean_system_instruction_modifier(
     callback_context: CallbackContext,
