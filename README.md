@@ -18,7 +18,7 @@ _This demonstration uses an audio sample generated via **Gemini 3.1 Flash TTS**.
 
 ### UI Component Representation (Table)
 
-![Tabular Dashboard Visualization](assets/demo_visual.svg)
+![Tabular Dashboard Visualization](assets/demo_visual.png)
 _The parsed JSON data rendered into a clean, tabular layout, showcasing how the deterministic payload seamlessly maps to a clinician dashboard or Electronic Health Record (EHR) system._
 
 ## Installation
