@@ -19,7 +19,6 @@ from utils.audio_processing import transcribe_medical_audio
 from utils.extract_instruction import extract_instruction
 from utils.schemas import SOAPNoteSchema
 
-# --- Explicitly register common audio & video MIME types ---
 mimetypes.add_type('audio/mpeg', '.mp3')
 mimetypes.add_type('audio/wav', '.wav')
 mimetypes.add_type('audio/x-wav', '.wav')
@@ -28,7 +27,6 @@ mimetypes.add_type('audio/m4a', '.m4a')
 mimetypes.add_type('audio/x-m4a', '.m4a')
 mimetypes.add_type('audio/mp4', '.mp4')
 
-# Add these video extensions
 mimetypes.add_type('video/mp4', '.mp4')
 mimetypes.add_type('video/quicktime', '.mov')
 mimetypes.add_type('video/x-matroska', '.mkv')
@@ -49,41 +47,48 @@ async def transcriber_combined_callback(
 
     if llm_request.contents:
         llm_request.contents = [llm_request.contents[-1]]
+        
+        all_metadata = []
+        file_counter = 1
 
         for content in llm_request.contents:
             if not content.parts:
                 continue
             for part in content.parts:
                 if part.inline_data and part.inline_data.mime_type and \
-                   part.inline_data.mime_type.startswith("audio/"):
+                   part.inline_data.mime_type.startswith(("audio/", "video/")):
 
                     detected_mime = part.inline_data.mime_type
                     computed_suffix = mimetypes.guess_extension(detected_mime) or ".wav"
-                    audio_bytes = part.inline_data.data
+                    media_bytes = part.inline_data.data
 
                     with tempfile.NamedTemporaryFile(delete=False, suffix=computed_suffix) as tmp:
-                        tmp.write(audio_bytes)
+                        tmp.write(media_bytes)
                         tmp_path = tmp.name
 
                     try:
-                        print(f"\n[*] Intercepted Web UI audi ({detected_mime} -> {computed_suffix}).")
-                        print("[*] Transcribing via OpenAI Whisper...")
+                        print(f"\n[*] Intercepted Web UI media ({detected_mime} -> {computed_suffix}).")
+                        print(f"[*] Transcribing media file #{file_counter} via OpenAI Whisper...")
 
                         transcript, metadata = transcribe_medical_audio(tmp_path)
-                        print("[*] Transcription complete. Storing metadata in session state.")
+                        print(f"[*] Transcription complete for file #{file_counter}.")
 
                         from datetime import datetime
                         timestamp = datetime.now().strftime("%Y%m%do_%H%M%S")
-                        metadata.audio_file_ref = f"audio_recording_{timestamp}{computed_suffix}"
                         
+                        # Capture the current index number before incrementing file_counter
+                        current_audio_idx = file_counter
+                        metadata.audio_file_ref = f"media_recording_{timestamp}_{current_audio_idx}{computed_suffix}"
+                        file_counter += 1
+                        
+                        all_metadata.append(metadata)
+                         
                         part.inline_data = None
-
-                        metadata_json = metadata.model_dump_json(indent=2, exclude_none=True)
-
-                        callback_context.state["audio_metadata_json"] = metadata_json
-
+                        
+                        # Injecting the visual label inside the transcript block tags
                         part.text = (
                             f"<transcript>\n"
+                            f"Audio {current_audio_idx}:\n"
                             f"{transcript}\n"
                             f"</transcript>"
                         )
@@ -91,6 +96,10 @@ async def transcriber_combined_callback(
                         if os.path.exists(tmp_path):
                             os.remove(tmp_path)
             print(content.parts)
+
+        if all_metadata:
+            metadata_list = [m.model_dump(exclude_none=True) for m in all_metadata]
+            callback_context.state["audio_metadata_json"] = json.dumps(metadata_list, indent=2)
 
     return None
 
@@ -109,7 +118,6 @@ async def clean_system_instruction_modifier(
             last_msg = llm_request.contents[-1]
             if last_msg.parts:
                 for part in last_msg.parts:
-                    # Target only the part containing the actual agent text transcript
                     if part.text and "[transcriber_agent] said:" in part.text:
                         part.text = (
                             f"<audio_metadata>\n"

@@ -58,7 +58,8 @@ class AudioMetadata(BaseModel):
 
 class MetadataSchema(BaseModel):
     patient: Optional[Patient] = None
-    audio: Optional[AudioMetadata] = None
+    # Swapped from Optional[AudioMetadata] to a list to support multiple media sources
+    audio: list[AudioMetadata] = Field(default_factory=list)
 
 # --- Main Schema ---
 
